@@ -18,7 +18,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
     php5-gd php5-mysql php5-pgsql \
     php5-sqlite wget sqlite git \
     libsqlite3-dev postgresql-client mysql-client \
-    nginx \
+    nginx git \
     supervisor cron && \
     apt-get clean && apt-get autoremove -q && \
     rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man /tmp/*
@@ -44,6 +44,10 @@ RUN adduser www-data sudo && \
 WORKDIR /var/www/html/
 USER www-data
 
+RUN chown -R www-data /var/www/html && \
+    rm -rf /var/www/html/* && \
+    git clone --branch csats --depth 1 https://github.com/csats/Cachet.git .
+
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
     php -r "copy('https://composer.github.io/installer.sig', '/tmp/composer-setup.sig');" && \
@@ -51,11 +55,7 @@ RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php')
     php /tmp/composer-setup.php --version=1.1.2 && \
     php -r "unlink('composer-setup.php');"
 
-RUN wget https://github.com/cachethq/Cachet/archive/${cachet_ver}.tar.gz && \
-    tar xzvf ${cachet_ver}.tar.gz --strip-components=1 && \
-    chown -R www-data /var/www/html && \
-    rm -r ${cachet_ver}.tar.gz && \
-    php composer.phar install --no-dev -o && \
+RUN php composer.phar install --no-dev -o && \
     rm -rf bootstrap/cache/*
 
 COPY conf/.env.docker /var/www/html/.env
