@@ -3,7 +3,7 @@ FROM debian:jessie
 MAINTAINER Alt Three <support@alt-three.com>
 
 ARG cachet_ver
-ENV cachet_ver master
+ENV cachet_ver ${cachet_ver:-master}
 
 # Using debian packages instead of compiling from scratch
 RUN DEBIAN_FRONTEND=noninteractive \
@@ -18,13 +18,16 @@ RUN DEBIAN_FRONTEND=noninteractive \
     php5-gd php5-mysql php5-pgsql \
     php5-sqlite wget sqlite git \
     libsqlite3-dev postgresql-client mysql-client \
+    nginx \
     supervisor cron && \
     apt-get clean && apt-get autoremove -q && \
     rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man /tmp/*
 
 COPY conf/php-fpm-pool.conf /etc/php5/fpm/pool.d/www.conf
 COPY conf/supervisord.conf /etc/supervisor/supervisord.conf
+COPY conf/nginx-site.conf /etc/nginx/sites-available/default
 
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 RUN sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php5/fpm/php-fpm.conf
 RUN mkdir -p /var/www/html && \
     chown -R www-data /var/www
@@ -43,7 +46,7 @@ USER www-data
 
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');" && \
-    php -r "copy('https://composer.github.io/installer.sig', '/tmp/composer-setup.sig');" && \ 
+    php -r "copy('https://composer.github.io/installer.sig', '/tmp/composer-setup.sig');" && \
     php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" && \
     php /tmp/composer-setup.php --version=1.1.2 && \
     php -r "unlink('composer-setup.php');"
@@ -57,8 +60,7 @@ RUN wget https://github.com/cachethq/Cachet/archive/${cachet_ver}.tar.gz && \
 
 COPY conf/.env.docker /var/www/html/.env
 
-VOLUME /var/www
-EXPOSE 8000
+EXPOSE 80
 
 ENTRYPOINT ["/sbin/entrypoint.sh"]
 CMD ["start"]
