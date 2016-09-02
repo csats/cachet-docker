@@ -11,6 +11,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
     echo "APT::Install-Suggests \"0\";" >> /etc/apt/apt.conf.d/02recommends && \
     apt-get clean && \
     apt-get -q -y update && \
+    apt-get -y dist-upgrade && \
     apt-get -q -y install \
     ca-certificates php5-fpm php5-curl \
     php5-readline php5-mcrypt sudo \
