@@ -9,6 +9,7 @@ ENV cachet_ver ${cachet_ver:-2.3.11csats}
 RUN DEBIAN_FRONTEND=noninteractive \
     echo "APT::Install-Recommends \"0\";" >> /etc/apt/apt.conf.d/02recommends && \
     echo "APT::Install-Suggests \"0\";" >> /etc/apt/apt.conf.d/02recommends && \
+    mkdir -p /var/cache/apt/archives && \
     apt-get clean && \
     apt-get -q -y update && \
     apt-get -y dist-upgrade && \
